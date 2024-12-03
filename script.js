@@ -4,6 +4,12 @@ let cells = [];
 let score = 0;
 
 
+//variables for touch/mouse control
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+let isMouseDown = false;
 
 document.addEventListener('DOMContentLoaded', setup);
 
@@ -13,7 +19,97 @@ function setup() {
     addNumber();
     addNumber();
     document.addEventListener('keydown', handleInput);
+
+    const gameContainer = document.getElementById('game-container');
+    gameContainer.addEventListener('touchstart', handleTouchStart, false);
+    gameContainer.addEventListener('touchmove', handleTouchMove, false);
+    gameContainer.addEventListener('touchend', handleTouchEnd, false);
+
+    gameContainer.addEventListener('mousedown', handleMouseDown, false);
+    gameContainer.addEventListener('mousemove', handleMouseMove, false);
+    gameContainer.addEventListener('mouseup', handleMouseUp, false);
 }
+
+
+// New touch event handler functions
+function handleTouchStart(event) {
+    const touch = event.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+}
+
+function handleTouchMove(event) {
+    event.preventDefault(); // Prevent scrolling
+    const touch = event.touches[0];
+    touchEndX = touch.clientX;
+    touchEndY = touch.clientY;
+}
+
+function handleTouchEnd() {
+    handleGesture();
+}
+
+// New mouse event handler functions
+function handleMouseDown(event) {
+    isMouseDown = true;
+    touchStartX = event.clientX;
+    touchStartY = event.clientY;
+}
+
+function handleMouseMove(event) {
+    if (isMouseDown) {
+        touchEndX = event.clientX;
+        touchEndY = event.clientY;
+    }
+}
+
+function handleMouseUp() {
+    if (isMouseDown) {
+        isMouseDown = false;
+        handleGesture();
+    }
+}
+
+// New function to handle gestures
+function handleGesture() {
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+
+    let moved = false;
+
+    if (Math.max(absDeltaX, absDeltaY) > 30) { // Minimum swipe distance
+        if (absDeltaX > absDeltaY) {
+            if (deltaX > 0) {
+                moved = moveRight();
+            } else {
+                moved = moveLeft();
+            }
+        } else {
+            if (deltaY > 0) {
+                moved = moveDown();
+            } else {
+                moved = moveUp();
+            }
+        }
+
+        if (moved) {
+            addNumber();
+            if (isGameOver()) {
+                setTimeout(() => alert('Game Over!'), 100);
+            }
+        }
+    }
+
+    // Reset touch positions
+    touchStartX = 0;
+    touchStartY = 0;
+    touchEndX = 0;
+    touchEndY = 0;
+}
+
 
 function createGrid() {
     const gridContainer = document.getElementById('grid');
